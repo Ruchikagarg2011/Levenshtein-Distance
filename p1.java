@@ -1,134 +1,146 @@
 package Pattern;
 
+/**
+ * 
+ * @author Ruchika Garg
+ * @studentid 1430065
+ * @email rgarg@scu.edu
+ *
+ */
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 
-public class Assignment1 {
-
-	public void computeDistance(String text, String pattern) {
+public class P1 {
+	
+	private static int sequenceNo = 1;
+	private String text = null;
+	private String pattern = null;
+	private String validString = "[a-zA-Z]+";
+	
+/** 
+ * method for computation of minimum distance between two strings and their operation sequence 
+ **/	
+	
+	public void computeDistance() {
+		
+		if (text == null || pattern == null) {
+			System.out.println("Error : String can't be null");
+			System.exit(0);
+		} else if (!text.matches(validString)) {
+			System.out.println("Error : Not a Valid String");
+			System.exit(0);
+		} else if (!pattern.matches(validString)) {
+			System.out.println("Error : Not a Valid String");
+			System.exit(0);
+		}
 
 		int len1 = pattern.length();
 		int len2 = text.length();
-		int editDistance[][] = new int[len1 + 1][len2 + 1];
-
-		ArrayList<Character>[][] pathMatrix = new ArrayList[len1][len2];
-		for (int row = 0; row < pathMatrix.length; row++) {
-			for (int col = 0; col < pathMatrix[row].length; col++) {
-				pathMatrix[row][col] = new ArrayList<Character>();
+		int distanceMatrix[][] = new int[len1 + 1][len2 + 1];
+		@SuppressWarnings("unchecked")
+		ArrayList<String>[][] operationsMatrix = new ArrayList[len1+1][len2+1];  /** Creating 2D matrix of ArrayList of ArrayList **/
+		for (int row = 0; row < operationsMatrix.length; row++) {
+			for (int col = 0; col < operationsMatrix[row].length; col++) {
+				operationsMatrix[row][col] = new ArrayList<String>();
 			}
 		}
 
-		editDistance[0][0] = 0;
-
+		distanceMatrix[0][0] = 0;			/*** Initialization of distance matrix ***/
 		for (int row = 1; row <= len1; row++) {
-			editDistance[row][0] = Integer.MAX_VALUE;
+			distanceMatrix[row][0] = row;
 		}
-
 		for (int col = 1; col <= len2; col++) {
-			editDistance[0][col] = Integer.MAX_VALUE;
+			distanceMatrix[0][col] = col;
 		}
-
+		operationsMatrix[0][0].add("None");		/*** Initialization of operations matrix ***/
 		for (int row = 1; row <= len1; row++) {
+			operationsMatrix[row][0].add("Insert");
+		}
+		for (int col = 1; col <= len2; col++) {
+			operationsMatrix[0][col].add("Delete");
+		}
+		
+		/*** calculating minimum distance and operation matrix ***/	
+		
+		for (int row = 1; row <= len1; row++) {     
 			for (int col = 1; col <= len2; col++) {
-
 				if (pattern.charAt(row - 1) == text.charAt(col - 1)) {
-					editDistance[row][col] = Math.min(editDistance[row - 1][col - 1], editDistance[row][col - 1]);
-					editDistance[row][col] = Math.min(editDistance[row - 1][col], editDistance[row][col]);
-					if (row == 1 && col !=1 ) {
-						if (editDistance[row][col] == editDistance[row - 1][col - 1]) {
-							pathMatrix[row-1][col-1].add('R');
-						}
-
-						if (editDistance[row][col] == editDistance[row - 1][col]) {
-							pathMatrix[row-1][col-1].add('I');
-						}
-
-						if (editDistance[row][col] == editDistance[row][col - 1]) {
-							pathMatrix[row-1][col-1].add('D');
-						}
-					} else {
-						pathMatrix[row-1][col-1].add('N');
-					}
-
+					distanceMatrix[row][col] = distanceMatrix[row - 1][col - 1];
+						operationsMatrix[row][col].add("None");
 				} else {
-					editDistance[row][col] = Math.min(editDistance[row - 1][col - 1], editDistance[row][col - 1]);
-					editDistance[row][col] = Math.min(editDistance[row - 1][col], editDistance[row][col]);
-					editDistance[row][col] = editDistance[row][col] + 1;
-					if (editDistance[row][col] - 1 == editDistance[row - 1][col - 1]) {
-						pathMatrix[row-1][col-1].add('R');
+					distanceMatrix[row][col] = Math.min(distanceMatrix[row - 1][col - 1], distanceMatrix[row][col - 1]);
+					distanceMatrix[row][col] = Math.min(distanceMatrix[row - 1][col], distanceMatrix[row][col]);
+					distanceMatrix[row][col] = distanceMatrix[row][col] + 1;
+					if (distanceMatrix[row][col] - 1 == distanceMatrix[row - 1][col - 1]) {
+						operationsMatrix[row][col].add("Replace");
 					}
-					if (editDistance[row][col] - 1 == editDistance[row - 1][col]) {
-						pathMatrix[row-1][col-1].add('I');
+					if (distanceMatrix[row][col] - 1 == distanceMatrix[row - 1][col]) {
+						operationsMatrix[row][col].add("Insert");
 					}
-					if (editDistance[row][col] - 1 == editDistance[row][col - 1]) {
-						pathMatrix[row-1][col-1].add('D');
+					if (distanceMatrix[row][col] - 1 == distanceMatrix[row][col - 1]) {
+						operationsMatrix[row][col].add("Delete");
 					}
 				}
 			}
-		}
-		for (int row = 0; row < pathMatrix.length; row++) {
-			for (int col = 0; col < pathMatrix[row].length; col++) {
-				// for(char c:pathMatrix[row][col] )
-				System.out.print(pathMatrix[row][col]);
-			}
-			System.out.println("");
-		}
-		for (int row = 1; row < editDistance.length; row++) {
-			for (int col = 1; col < editDistance[row].length; col++) {
-				// for(char c:pathMatrix[row][col] )
-				System.out.print(editDistance[row][col]);
-			}
-			System.out.println("");
-		}
-		System.out.println(editDistance[len1][len2]);
-		String finalPath ="";
-		traversePath(pathMatrix,editDistance, len1-1, len2-1, finalPath);
-		//System.out.println(finalPath);
-
-		// System.out.print(traversePath(pathMatrix,len1-1,len2-1));
+		}		
+		System.out.println("Number Of operations : " + distanceMatrix[len1][len2]);
+		String finalPath = "";
+		traversePath(operationsMatrix,distanceMatrix, len1, len2, finalPath);		
 	}
-
-	public void traversePath(ArrayList<Character>[][] pathMatrix, int [][] editDistance,int row, int col, String finalPath) {
-		if (row == -1 || col == -1) {
-			System.out.println(finalPath);
+	
+/** 
+* method for backtracking of the matrix to find the minimum paths and printing all the paths
+**/
+	
+	public void traversePath(ArrayList<String>[][] operationsMatrix, int [][] distanceMatrix, int row, int col, String finalPath) {
+		if (distanceMatrix[row][col] == 0) {
+			System.out.println(sequenceNo++ + ") " + text + " "+ finalPath);
 			return;
 		}
-		ArrayList<Character> path = pathMatrix[row][col];
-		// System.out.print(path);
-		for (int k = 0; k < path.size(); k++) {
+		ArrayList<String> multiplePaths = operationsMatrix[row][col];
+		for (int k = 0; k < multiplePaths.size(); k++) {
 			String curr = finalPath;
-			char c = path.get(k);
-		//	finalPath.append(path.get(k));
-			if(c != 'N') {
-				curr = c + finalPath;
+			String c = multiplePaths.get(k);
+			if(c != "None") {
+				if(c == "Delete") {
+						curr = " " + c + " " + text.charAt(col-1) + " --> " + pattern.substring(0,row) + text.substring(col) + finalPath;
+				} else if (c == "Replace") {
+					curr = " " + c + " " + text.charAt(col-1) + " by " + pattern.charAt(row-1) + " --> " + pattern.substring(0,row) + text.substring(col) + finalPath;
+				} else {
+					curr = " "+ c + " " + pattern.charAt(row-1) + " --> " + pattern.substring(0,row) + text.substring(col) + finalPath;
+				}
 			}
-			if (row == 0 && editDistance[row+1][col+1]<=1) {
-				System.out.println(curr);
+			if (distanceMatrix[row][col]<=0) {				
+				System.out.println(sequenceNo++ + ") "+ text + curr);
 				return;
 			}
-			if (c == 'R' || c == 'N') {
-				
-				traversePath(pathMatrix,editDistance, row-1, col-1, curr);
-			//	row = row - 1;
-			//	col = col - 1;
-			} else if (c == 'I') {
-				traversePath(pathMatrix,editDistance, row-1, col, curr);
-
-			//	row = row - 1;
-			} else if (c == 'D') {
-				traversePath(pathMatrix,editDistance, row, col-1, curr);
-			//	col = col - 1;
+			if (c == "Replace" || c == "None") {
+				traversePath(operationsMatrix, distanceMatrix, row-1, col-1, curr);
+		
+			} else if (c == "Insert") {
+				traversePath(operationsMatrix, distanceMatrix, row-1, col, curr);
+		
+			} else if (c == "Delete") {
+				traversePath(operationsMatrix, distanceMatrix, row, col-1, curr);		
 			}
-		//	traversePath(pathMatrix,editDistance, row, col, curr);
-		}
-		// System.out.println(finalPath.reverse().toString());
-		// return finalPath.reverse().toString();
+		}		
 	}
 
-	public static void main(String args[]) {
-		Assignment1 ob = new Assignment1();
-		ob.computeDistance("paris", "alice");
+	public static void main(String[] args) throws IOException {
+		BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+		String s1 = input.readLine();
+		String s2 = input.readLine();
+		String temp = input.readLine();
+		if ( temp != null && !temp.isEmpty() ) {
+			System.out.println("Not a valid Input !! Only two strings should be there!!");
+			System.exit(0);
+		}		
+		P1 object = new P1();
+		object.text = s1;
+		object.pattern = s2;
+		object.computeDistance();
 	}
-
 }
 
-// return word.matches("[A-Z]+|[a-z]+|[A-Z][a-z]+");
